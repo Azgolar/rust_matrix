@@ -1,0 +1,3 @@
+/target
+# Ignore all .txt files
+*.txt
