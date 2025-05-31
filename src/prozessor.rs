@@ -4,12 +4,12 @@ use core_affinity::get_core_ids;
 
 #[derive(Debug)]
 pub struct ProzessorSpecs {
-    pub name: String,
-    pub logisch: u32,
-    pub physisch: u32,
-    pub hyperthreads_pro_kern: u32,
-    pub mit_hyperthreading: Vec<u32>,
-    pub ohne_hyperthreading: Vec<u32>
+    pub name: String,                           // Name des Prozessors
+    pub logisch: u32,                           // Anzahl der logischen Kerne
+    pub physisch: u32,                          // Anzahl der physischen Kerne
+    pub hyperthreads_pro_kern: u32,             // Anzahl der Hyperthread pro physischem Kern mit Hyperthreads
+    pub mit_hyperthreading: Vec<u32>,           // Liste mit allen physischen Kernen die Hyperthreading haben
+    pub ohne_hyperthreading: Vec<u32>           // Liste mit allen physischen Kernen die kein Hyperthreading haben
 }
 
 /*

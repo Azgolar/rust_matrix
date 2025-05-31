@@ -1,47 +1,55 @@
-use core_affinity::{CoreId, get_core_ids};
-use std::process;
+use core_affinity::CoreId;
 use crate::prozessor::ProzessorSpecs;
+use std::collections::HashSet;
 
 /*
-    Bestimmt eine Liste von CPU Kernen auf die Threads gepinnt werden sollen.
-
-    Vorgehen: 
-    1. zuerst wird auf physische Kerne gepinnt
-    2. falls keine physischen Kerne mehr übrig sind wird auf logische Kerne gepinnt 
-    
-    Die Liste der Kern IDs ist in aufsteigender Reihenfolge
+    Auswahl fürs CPU Pinning nach Reihenfolge:
+    1. Den logischen Kern mit der niedrigsten id des physischen Kerns der Hyperthreading hat
+    2. den logischen Kern eines pyhsischen Kerns ohne Hyperthreading
+    3. den übrigen logischen Kern eines der pyhsisch hyperthreading hat
 */
 pub fn reihenfolge(anzahl: usize, prozessor: &ProzessorSpecs) -> Vec<CoreId> {
-    // Alle Kerne Ids lesen
-    let ids: Vec<CoreId> = get_core_ids().unwrap_or_else(|| {
-        println!("\nFehler beim Lesen der Kern-IDs für CPU Pinning\n");
-        process::exit(1);    
-    }); 
-
-    let mut reihenfolge: Vec<CoreId> = Vec::with_capacity(anzahl);
-
-    // physische Kerne zuerst hinzufügen
-    for i in 0..prozessor.physisch as usize {
-        if reihenfolge.len() >= anzahl {
-            break;
-        }
-
-        let index: usize = i * prozessor.hyperthreading as usize;
-        let gefunden: Option<&CoreId> = ids.iter().find(|c: &&CoreId| c.id == index);
-        reihenfolge.push(*gefunden.unwrap());
-    }
-
-    // restlichen logischen Kerne hinzufügen
-    for j in ids.iter() {
-        if reihenfolge.len() >= anzahl {
-            break;
-        }
-        // nur hinzufügen falls noch nicht in Liste
-        if !reihenfolge.iter().any(|c: &CoreId| c.id == j.id) {
-            reihenfolge.push(*j)
-        }
-    }
-
-    reihenfolge
-}
     
+    let mut liste: Vec<CoreId> = Vec::with_capacity(anzahl);
+
+    let mut gesehen: HashSet<u32> = HashSet::with_capacity(anzahl);
+
+    // physische Kerne die hyperthreading haben hinzufügen ohne es zu nutzen
+    for &a in &prozessor.mit_hyperthreading {
+        if liste.len() == anzahl {
+            break;
+        }
+
+        let kern: u32  = a * prozessor.hyperthreads_pro_kern;
+       
+        // zu Hashmap und Ergebnisliste hinzufügen
+        if gesehen.insert(kern) {
+            liste.push(CoreId{ id: kern as usize});  
+        }    
+    }
+
+    // physische Kerne ohne hyperthreading hinzufügen
+    for &b in &prozessor.ohne_hyperthreading {
+        if liste.len() == anzahl {
+            break;
+        }
+
+        // zu Hashmap und Ergebnisliste hinzufügen
+        if gesehen.insert(b) {
+            liste.push(CoreId{id: b as usize });
+        }
+    }
+
+    // alle übrigen Hyperthreading hinzufügen
+    for c in 0..prozessor.logisch {
+        if liste.len() == anzahl {
+            break;
+        }
+
+        if gesehen.insert(c) {
+            liste.push(CoreId{ id: c as usize});
+        }
+    }
+
+    liste
+}
