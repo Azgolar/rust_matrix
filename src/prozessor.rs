@@ -4,12 +4,12 @@ use core_affinity::get_core_ids;
 
 #[derive(Debug)]
 pub struct ProzessorSpecs {
-    pub name: String,                           // Name des Prozessors
-    pub logisch: u32,                           // Anzahl der logischen Kerne
-    pub physisch: u32,                          // Anzahl der physischen Kerne
-    pub hyperthreads_pro_kern: u32,             // Anzahl der Hyperthread pro physischem Kern mit Hyperthreads
-    pub mit_hyperthreading: Vec<u32>,           // Liste mit allen physischen Kernen die Hyperthreading haben
-    pub ohne_hyperthreading: Vec<u32>           // Liste mit allen physischen Kernen die kein Hyperthreading haben
+    pub name: String,                      // Name des Prozessors
+    pub logische_kerne: u32,                      // Anzahl der logischen Kerne
+    pub physische_kerne: u32,                     // Anzahl der physischen Kerne
+    pub hyperthreads_pro_kern: u32,        // Anzahl der Hyperthreads pro physischem Kern mit Hyperthreads
+    pub mit_hyperthreading: u32,           // Anzahl Kerne mit Hyperthreading
+    pub ohne_hyperthreading: u32           // Anzahl Kerne ohne Hyperthreading
 }
 
 /*
@@ -21,11 +21,11 @@ impl ProzessorSpecs {
         // Default Werte
         let mut daten: ProzessorSpecs = ProzessorSpecs {
             name: String::new(),
-            logisch: 0,
-            physisch: 0,
+            logische_kerne: 0,
+            physische_kerne: 0,
             hyperthreads_pro_kern: 0,
-            mit_hyperthreading: Vec::new(),
-            ohne_hyperthreading: Vec::new()
+            mit_hyperthreading: 0,
+            ohne_hyperthreading: 0
         };
 
         // cpuinfo ist gelesene Zeilen oder bei Fehler wegen unwrap_or_default ein leerer String
@@ -56,19 +56,19 @@ impl ProzessorSpecs {
             println!("\nFehler beim Lesen der logischen Kern ids für CPU Pinning\n");
             process::exit(1);    
         }); 
-        daten.logisch = anzahl.len() as u32;
+        daten.logische_kerne = anzahl.len() as u32;
 
         // Anzahl physische Kerne
-        daten.physisch = daten.mit_hyperthreading.len() as u32 + daten.ohne_hyperthreading.len() as u32;
+        daten.physische_kerne = daten.mit_hyperthreading as u32 + daten.ohne_hyperthreading as u32;
 
-        if daten.physisch > 0 {
-            daten.hyperthreads_pro_kern = daten.logisch / daten.physisch;
+        if daten.physische_kerne > 0 {
+            daten.hyperthreads_pro_kern = (daten.logische_kerne - daten.ohne_hyperthreading as u32) / (daten.physische_kerne -daten.ohne_hyperthreading as u32) ;
         }
         else {
             daten.hyperthreads_pro_kern = 1;
         }
 
-        if daten.name.is_empty() || daten.logisch == 0 || daten.physisch == 0 || daten.mit_hyperthreading.is_empty() || daten.ohne_hyperthreading.is_empty() {
+        if daten.name.is_empty() || daten.logische_kerne == 0 || daten.physische_kerne == 0 || daten.mit_hyperthreading == 0 || daten.ohne_hyperthreading == 0 {
             println!("\nFehler beim Auslesen der Prozessordaten")
         }
 
@@ -80,7 +80,7 @@ impl ProzessorSpecs {
 /*
     Bestimmt die Kern ids mit Hyperthreading und ohne Hyperthreading
 */
-fn kernart_bestimmen() -> (Vec<u32>, Vec<u32>) {
+fn kernart_bestimmen() -> (u32, u32) {
 
     // lscpu -p lesen
     let lscpu = Command::new("lscpu").arg("-p").output().unwrap_or_else(|_| {
@@ -125,20 +125,17 @@ fn kernart_bestimmen() -> (Vec<u32>, Vec<u32>) {
     }
 
     // Aufteilen in Kerne mit Hyperthreading und ohne Hyperthreading
-    let mut mit_hyperthreading: Vec<u32> = Vec::new();
-    let mut ohne_hyperthreading: Vec<u32> = Vec::new();
+    let mut mit_hyperthreading: u32 = 0;
+    let mut ohne_hyperthreading: u32 = 0;
 
-    for (&id, &anzahl) in map.iter() {
+    for &anzahl in map.values() {
         if anzahl > 1 {
-            mit_hyperthreading.push(id);
+            mit_hyperthreading = mit_hyperthreading + 1;
         }
         else {
-            ohne_hyperthreading.push(id);
+            ohne_hyperthreading = ohne_hyperthreading + 1;
         }
     }
-
-    mit_hyperthreading.sort();
-    ohne_hyperthreading.sort();
 
     (mit_hyperthreading, ohne_hyperthreading)
 } 

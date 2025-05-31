@@ -15,7 +15,7 @@ pub fn reihenfolge(anzahl: usize, prozessor: &ProzessorSpecs) -> Vec<CoreId> {
     let mut gesehen: HashSet<u32> = HashSet::with_capacity(anzahl);
 
     // physische Kerne die hyperthreading haben hinzufügen ohne es zu nutzen
-    for &a in &prozessor.mit_hyperthreading {
+    for a in 0..prozessor.mit_hyperthreading {
         if liste.len() == anzahl {
             break;
         }
@@ -28,8 +28,10 @@ pub fn reihenfolge(anzahl: usize, prozessor: &ProzessorSpecs) -> Vec<CoreId> {
         }    
     }
 
+    let offset = prozessor.mit_hyperthreading * prozessor.hyperthreads_pro_kern; 
+
     // physische Kerne ohne hyperthreading hinzufügen
-    for &b in &prozessor.ohne_hyperthreading {
+    for b in offset..prozessor.logische_kerne {
         if liste.len() == anzahl {
             break;
         }
@@ -41,7 +43,7 @@ pub fn reihenfolge(anzahl: usize, prozessor: &ProzessorSpecs) -> Vec<CoreId> {
     }
 
     // alle übrigen Hyperthreading hinzufügen
-    for c in 0..prozessor.logisch {
+    for c in 0..prozessor.logische_kerne {
         if liste.len() == anzahl {
             break;
         }

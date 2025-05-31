@@ -21,10 +21,10 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
         println!("{:?}\n", prozessor);
     }
 
-    let mut gemessen: Vec<BenchmarkEintrag> = Vec::with_capacity((prozessor.logisch - 1) as usize * n.len());
+    let mut gemessen: Vec<BenchmarkEintrag> = Vec::with_capacity((prozessor.logische_kerne - 1) as usize * n.len());
 
     // Benchmark durchführen
-    for i in 2..=prozessor.logisch as usize {
+    for i in 2..=prozessor.logische_kerne as usize {
 
         // Für debug Ausgabe
         let mut ok: bool = true;
@@ -104,8 +104,8 @@ fn speichern(name: &str, prozessor: &ProzessorSpecs, gemessen: &Vec<BenchmarkEin
     });
 
     // Kopfzeile hinzufügen
-    writeln!(datei, "Name: {}, logisch: {}, physisch: {}, hyperthreading: {}", prozessor.name, prozessor.logisch, 
-        prozessor.physisch, prozessor.hyperthreads_pro_kern).unwrap();
+    writeln!(datei, "Name: {}, logische Kerne: {}, physische Kerne: {}, hyperthreading: {}", prozessor.name, prozessor.logische_kerne, 
+        prozessor.physische_kerne, prozessor.hyperthreads_pro_kern).unwrap();
 
     for a in gemessen {
         writeln!(datei, "{},{},{}", a.threads, a.n, a.laufzeit).unwrap_or_else(|f| {
