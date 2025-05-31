@@ -105,7 +105,7 @@ fn speichern(name: &str, prozessor: &ProzessorSpecs, gemessen: &Vec<BenchmarkEin
 
     // Kopfzeile hinzufügen
     writeln!(datei, "Name: {}, logisch: {}, physisch: {}, hyperthreading: {}", prozessor.name, prozessor.logisch, 
-        prozessor.physisch, prozessor.hyperthreading).unwrap();
+        prozessor.physisch, prozessor.hyperthreads_pro_kern).unwrap();
 
     for a in gemessen {
         writeln!(datei, "{},{},{}", a.threads, a.n, a.laufzeit).unwrap_or_else(|f| {
