@@ -64,7 +64,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
 
             if eingabe.debug {
                 let mut c_kontrolle: Vec<Vec<u32>> = vec![vec![0; aktuell]; aktuell];
-                single_thread::single(&a, &b, &mut c_kontrolle, aktuell);
+                single_thread::single(&a, &b, &mut c_kontrolle, aktuell, &pinnen[0]);
                 let z: bool  = matrix::vergleich(&c_kontrolle, &c, aktuell);
                 if !z {
                     ok = false;
