@@ -30,9 +30,13 @@ pub fn manuelle_threads(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u3
                 // Thread pinnen
                 set_for_current(kern);
 
-                for (x, ausgabe) in bearbeiten.iter_mut().enumerate() {
+                for z in 0..zeilen {
+
+                    // Zugriff auf aktuelle Zeile zur Bearbeitung
+                    let ausgabe: &mut Vec<u32> = &mut bearbeiten[z];
+
                     // globaler Zeilenindex
-                    let i: usize = anfang + x;
+                    let i: usize = anfang + z;
 
                     for j in 0..n {
                         let mut summe: u32 = 0;
