@@ -14,7 +14,7 @@ pub struct Einstellungen {
     n_max: u32,
 
     /// Modus: 1 = manuelle Threads, 2 = Rayon, 3 = 
-    #[arg(short = 'm', value_parser = value_parser!(u32).range(1..=5))]
+    #[arg(short = 'm', value_parser = value_parser!(u32).range(0..=5))]
     modus: u32,
 
     /// Dateiname zum Speichern der Ergebnisse
@@ -29,7 +29,7 @@ pub struct Einstellungen {
 fn main() {
 
     // let mut eingabe = Args::parse();
-    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "1", "-a", "matrix", "-d"];
+    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "2", "-a", "matrix", "-d"];
     let mut eingabe: Einstellungen = Einstellungen::parse_from(&test);
 
     // falls nötig .txt an Dateiname hinzufügen
@@ -41,8 +41,9 @@ fn main() {
     let n: Vec<u32> = konvertieren(2, eingabe.n_max);
     if eingabe.debug {
         let umwandeln: &'static str = match eingabe.modus {
-            1 => "manuelle Threads",
-            2 => "Rayon",
+            1 => "single Thread",
+            2 => "manuelle Threads",
+            3 => "Rayon",
             _ => "Fehler, Modus nicht bekannt"
         };
         println!("\nEinstellungen:\nMatrixgrößen: {:?}\nModus:        {}\nLogdatei:     {}", n, umwandeln, eingabe.name);

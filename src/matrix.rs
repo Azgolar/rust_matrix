@@ -13,21 +13,6 @@ pub fn zufallswerte(n: usize) -> Vec<Vec<u32>> {
 }
 
 /*
-    single threaded Matrixmultiplikation zur Kontrolle
-*/
-pub fn single(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize) {
-    for i in 0..n {
-        for j in 0..n {
-            let mut summe: u32 = 0;
-            for k in 0..n {
-                summe = summe + a[i][k] * b[k][j];
-            }
-            c[i][j] = summe;
-        }
-    }
-} 
-
-/*
     Vergleich ob zwei Matrizen identisch sind
 */
 pub fn vergleich(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, n: usize) -> bool {

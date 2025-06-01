@@ -1,10 +1,7 @@
-use crate::Einstellungen;
-use crate::matrix;
-use crate::algorithmus::multi_threads;
-use crate::prozessor::ProzessorSpecs;
-use crate::pinning;
+use crate::{Einstellungen, matrix, pinning, prozessor::ProzessorSpecs};
+use crate::algorithmus::{single_thread, multi_threads, rayon};
 use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write};
-use core_affinity::{CoreId};
+use core_affinity::CoreId;
 
 struct BenchmarkEintrag {
     n: u32,
@@ -48,7 +45,15 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
 
             let start: Instant = Instant::now();
 
-            starten(&a, &b, &mut c, i, aktuell, &pinnen, eingabe.modus);
+            if eingabe.modus == 1 {
+                single_thread::single(&a, &b, &mut c, aktuell, &pinnen[0]);
+            }
+            else if eingabe.modus == 2 {
+                multi_threads::manuelle_threads(&a, &b, &mut c, aktuell, i, &pinnen);
+            }
+            else if eingabe.modus == 3 {
+                rayon::parallel(&a, &b, &mut c, aktuell);
+            }
             
             // Laufzeit in Millisekunden
             let dauer: f64 = start.elapsed().as_secs_f64() * 1000.0;
@@ -59,7 +64,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
 
             if eingabe.debug {
                 let mut c_kontrolle: Vec<Vec<u32>> = vec![vec![0; aktuell]; aktuell];
-                starten(&a, &b, &mut c_kontrolle, i, aktuell, &pinnen, 0);
+                single_thread::single(&a, &b, &mut c_kontrolle, aktuell);
                 let z: bool  = matrix::vergleich(&c_kontrolle, &c, aktuell);
                 if !z {
                     ok = false;
@@ -76,20 +81,6 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
     // Ergebnisse in Datei speichern
     speichern(&eingabe.name, &prozessor, &gemessen);
 }
-
-/*
-    Matrixmultiplikation durchführen
-*/
-fn starten(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, i: usize, aktuell: usize, pinnen: &Vec<CoreId>, modus: u32) {
-
-    if modus == 0 {
-        matrix::single(&a, &b, c, aktuell);
-    }
-    else if modus == 1 {
-        multi_threads::manuelle_threads(&a, &b, c, aktuell, i, &pinnen);
-    }
-}
-
 
 
 fn speichern(name: &str, prozessor: &ProzessorSpecs, gemessen: &Vec<BenchmarkEintrag>) {
