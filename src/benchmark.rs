@@ -1,6 +1,6 @@
 use crate::{Einstellungen, matrix, pinning, prozessor::ProzessorSpecs};
-use crate::algorithmus::{single_thread, multi_threads, rayon};
-use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write};
+use crate::algorithmus::{single_thread, manuelle_threads_neue_version, manuelle_threads_alte_version, loop_unrolling, rayon};
+use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write, sync::Arc};
 use core_affinity::CoreId;
 
 struct BenchmarkEintrag {
@@ -29,8 +29,15 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
         // Reihenfolge für Pinning
         let pinnen: Vec<CoreId> = pinning::reihenfolge(i, &prozessor);
 
-        let ids: Vec<usize> = pinnen.iter().map(|kern: &CoreId| kern.id).collect();
-        println!("Benchmark mit {} Threads. Pinning: {:?}", i, ids);
+        match eingabe.modus {
+            0 => {  println!("Benchmark mit {} Threads. Pinning auf Thread 0", i); }
+            1 | 2 | 3 | 4 => {  
+                    let ids: Vec<usize> = pinnen.iter().map(|kern: &CoreId| kern.id).collect();
+                    println!("Benchmark mit {} Threads. Pinning: {:?}", i, ids); }
+            5 =>  { println!("Benchmark mit {} Threads. kein Pinning möglich", i); } 
+            _ => { } // Fall nicht möglich da die Eingabe den Wert von Modus prüft
+        }
+
 
         // Benchmark für jeden Thread mit allen Matrixgrößen durchführen
         for j in 0..n.len() {
@@ -40,21 +47,28 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
             let a: Vec<Vec<u32>> = matrix::zufallswerte(aktuell);
             let b: Vec<Vec<u32>> = matrix::zufallswerte(aktuell);
 
-            // leere Ergebnismatrix
+            // leere Ergebnismatrizen
             let mut c: Vec<Vec<u32>> = vec![vec![0; aktuell]; aktuell];
+            let mut c_kontrolle: Vec<Vec<u32>> = vec![vec![0; aktuell]; aktuell];
+
+            if eingabe.debug {
+                single_thread::single(&a, &b, &mut c_kontrolle, aktuell, &pinnen[0]);
+            }
 
             let start: Instant = Instant::now();
 
-            if eingabe.modus == 1 {
-                single_thread::single(&a, &b, &mut c, aktuell, &pinnen[0]);
-            }
-            else if eingabe.modus == 2 {
-                multi_threads::manuelle_threads(&a, &b, &mut c, aktuell, i, &pinnen);
-            }
-            else if eingabe.modus == 3 {
-                rayon::parallel(&a, &b, &mut c, aktuell);
-            }
-            
+            match eingabe.modus {
+                    0 => {  single_thread::single(&a, &b, &mut c, aktuell, &pinnen[0]); }
+                    1 => {  let a_arc: Arc<Vec<Vec<u32>>> = Arc::new(a);
+                            let b_arc: Arc<Vec<Vec<u32>>> = Arc::new(b);                          
+                            manuelle_threads_alte_version::manuell(Arc::clone(&a_arc), Arc::clone(&b_arc), &mut c, aktuell, i, &pinnen); }
+                    2 => {  manuelle_threads_neue_version::manuell(&a, &b, &mut c, aktuell, i, &pinnen); }
+                    3 => {  loop_unrolling::unroll(&a, &b, &mut c, aktuell, i, &pinnen); }
+                    4 => {   } 
+                    5 => {  rayon::parallel(&a, &b, &mut c, aktuell); }
+                    _ => { } // Fall nicht möglich da die Eingabe die Korrektheit von Modus prüft
+                }
+           
             // Laufzeit in Millisekunden
             let dauer: f64 = start.elapsed().as_secs_f64() * 1000.0;
 
@@ -63,8 +77,6 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
             gemessen.push(ergebnis);
 
             if eingabe.debug {
-                let mut c_kontrolle: Vec<Vec<u32>> = vec![vec![0; aktuell]; aktuell];
-                single_thread::single(&a, &b, &mut c_kontrolle, aktuell, &pinnen[0]);
                 let z: bool  = matrix::vergleich(&c_kontrolle, &c, aktuell);
                 if !z {
                     ok = false;
