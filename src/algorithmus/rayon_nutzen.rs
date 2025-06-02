@@ -3,7 +3,7 @@ use rayon::iter::{ParallelIterator, IndexedParallelIterator, IntoParallelRefMutI
 
 /*
     Parallele Matrixmultiplikation mit Rayon
-    CPU Pinning ist bei Rayon nicht möglich da ein Thread Pool verwendet wird
+    CPU Pinning erfolgt beim erstellen des Thread Pools in benchmark.rs
 */
 pub fn parallel(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize) {
 
