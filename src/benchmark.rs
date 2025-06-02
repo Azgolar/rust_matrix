@@ -68,13 +68,14 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
                     3 => {  loop_unrolling::unroll(&a, &b, &mut c, aktuell, i, &pinnen); }
                     4 => {  block_tiling::tiling(&a, &b, &mut c, aktuell, i, &pinnen); } 
                     5 => {  
+                            // Notwendig weil close moved pinnen
                             // Zeitaufwand = allokation + koperien. 
                             // Bei 28 Einträgen mit je 8 Byte sind das geschätzt im dreistellen nanosekunden bereich. Also kaum Aufwand   
                             let kopie: Vec<CoreId> = pinnen.clone();                       
                             let pool: ThreadPool = ThreadPoolBuilder::new().num_threads(i)
                                     .start_handler(move |index| { set_for_current(kopie[index]);}).build()                             
                                     .unwrap_or_else(|f| {
-                                println!("\nWarnung: Fehler beim erstellen des Threadpools: {}", f);
+                                println!("\nFehler beim erstellen des Threadpools: {}", f);
                                 process::exit(1)});
                                 pool.install( || { rayon_nutzen::parallel(&a, &b, &mut c, aktuell)}); }
                     _ => { } // Fall nicht möglich da die Eingabe die Korrektheit von Modus prüft
