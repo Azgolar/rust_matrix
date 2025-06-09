@@ -14,7 +14,7 @@ pub struct Einstellungen {
     n_max: u32,
 
     /// Modus: 1 = manuelle Threads, 2 = Rayon, 3 = 
-    #[arg(short = 'm', value_parser = value_parser!(u32).range(0..=5))]
+    #[arg(short = 'm', value_parser = value_parser!(u32).range(0..=6))]
     modus: u32,
 
     /// Dateiname zum Speichern der Ergebnisse
@@ -29,7 +29,7 @@ pub struct Einstellungen {
 fn main() {
 
     //let mut eingabe = Einstellungen::parse();
-    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "4", "-a", "matrix", "-d"];
+    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "6", "-a", "matrix", "-d"];
     let mut eingabe: Einstellungen = Einstellungen::parse_from(&test);
 
     // falls nötig .txt an Dateiname hinzufügen
@@ -47,6 +47,7 @@ fn main() {
             3 => "manuelle Threads mit loop unrolling",
             4 => "manuelle Threads mit block tiling",
             5 => "parallelisierung mit Rayon",
+            6 => "parallelisierung mit unsafe",
             _ => "Fehler, Modus nicht bekannt"
         };
         println!("\nEinstellungen:\nMatrixgrößen: {:?}\nModus:        {}\nLogdatei:     {}", n, umwandeln, eingabe.name);

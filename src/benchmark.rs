@@ -1,6 +1,6 @@
 use crate::{Einstellungen, matrix, pinning, prozessor::ProzessorSpecs};
 use crate::algorithmus::{single_thread, manuelle_threads_neue_version, manuelle_threads_alte_version, loop_unrolling,
-    block_tiling, rayon_nutzen};
+    block_tiling, rayon_nutzen, manuelle_threads_unsicher};
 use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write, sync::Arc};
 use core_affinity::{CoreId, set_for_current};
 use rayon::{ThreadPoolBuilder, ThreadPool};
@@ -33,7 +33,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
 
         match eingabe.modus {
             0 => {  println!("Benchmark mit {} Threads. Pinning auf Thread 0", i); }
-            1 | 2 | 3 | 4 | 5 => {  
+            1 | 2 | 3 | 4 | 5 | 6 => {  
                     let ids: Vec<usize> = pinnen.iter().map(|kern: &CoreId| kern.id).collect();
                     println!("Benchmark mit {} Threads. Pinning: {:?}", i, ids); }
             _ => { } // Fall nicht möglich da die Eingabe den Wert von Modus prüft
@@ -78,6 +78,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
                                 println!("\nFehler beim erstellen des Threadpools: {}", f);
                                 process::exit(1)});
                                 pool.install( || { rayon_nutzen::parallel(&a, &b, &mut c, aktuell)}); }
+                    6 => {  manuelle_threads_unsicher::unsicher(&a, &b, &mut c, aktuell, i, &pinnen); }
                     _ => { } // Fall nicht möglich da die Eingabe die Korrektheit von Modus prüft
                 }
            
