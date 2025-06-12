@@ -74,7 +74,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
                                         process::exit(1);});
                         // Matrixmultiplikation ausführen
                         pool.install(|| { rayon_nutzen::parallel(&a, &b, &mut c, aktuell);});}
-                    5 = { }
+                    5 => { }
                     6 => { simd_nutzen::optimiert(&a, &b, &mut c, aktuell, i, &pinnen); }
                     _ => { } // nicht möglich da Prüfung des Modus bei Eingabe
                 }

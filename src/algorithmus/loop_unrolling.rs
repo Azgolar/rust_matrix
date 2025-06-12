@@ -21,7 +21,7 @@ pub fn unroll(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: us
                 zeilen = basis;
             }
 
-            let (bearbeiten, restliche_zeilen) = übrig.split_at_mut(zeilen);
+            let (bearbeiten, restliche_zeilen): (&mut[Vec<u32>], &mut[Vec<u32>]) = übrig.split_at_mut(zeilen);
             let anfang: usize = offset;
 
             let kern: CoreId = pinnen[z];

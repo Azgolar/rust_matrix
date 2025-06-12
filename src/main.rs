@@ -30,7 +30,7 @@ pub struct Einstellungen {
 fn main() {
 
     //let mut eingabe = Einstellungen::parse();
-    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "3", "-a", "matrix", "-d"];
+    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "6", "-a", "matrix", "-d"];
     let mut eingabe: Einstellungen = Einstellungen::parse_from(&test);
 
     // falls nötig .txt an Dateiname hinzufügen

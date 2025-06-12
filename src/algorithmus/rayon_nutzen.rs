@@ -1,5 +1,4 @@
 use rayon::iter::{ParallelIterator, IndexedParallelIterator, IntoParallelRefMutIterator};
-// alternative: use rayon::prelude::*;
 
 /*
     Parallele Matrixmultiplikation mit Rayon
@@ -7,7 +6,7 @@ use rayon::iter::{ParallelIterator, IndexedParallelIterator, IntoParallelRefMutI
 */
 pub fn parallel(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize) {
 
-    c.par_iter_mut().enumerate().for_each(|(i, zeile)| {
+    c.par_iter_mut().enumerate().for_each(|(i, zeile): (usize, &mut Vec<u32>)| {
         for j in 0..n {
             let mut summe: u32 = 0;
             for k in 0..n {

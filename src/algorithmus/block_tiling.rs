@@ -2,15 +2,13 @@ use std::thread;
 use core_affinity::{set_for_current, CoreId};
 
 pub fn tiling(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
-    let block: usize = 8;
-
     thread::scope(|s|{
         let mut übrig:&mut [Vec<u32>]  = c.as_mut_slice();
         let mut offset: usize = 0;
 
         // Zeilen pro Thread
-        let basis = n / threads;
-        let rest = n % threads;
+        let basis: usize = n / threads;
+        let rest: usize = n % threads;
 
         for z in 0..threads {
             // die ersten Threads bekommen eine zusätzliche Zeile
@@ -22,7 +20,7 @@ pub fn tiling(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: us
                 zeilen = basis;
             }
 
-            let (bearbeiten, restliche_zeilen) = übrig.split_at_mut(zeilen);
+            let (bearbeiten, restliche_zeilen): (&mut[Vec<u32>], &mut[Vec<u32>]) = übrig.split_at_mut(zeilen);
             let anfang: usize = offset;
 
             let kern: CoreId = pinnen[z];
@@ -38,13 +36,14 @@ pub fn tiling(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: us
             }
 
             // Block Tiling durchführen
+            let block = 8;
             for j_block in (0..n).step_by(block) {
                 for k_block in (0..n).step_by(block) {
                     
                     // Zeilen bearbeiten
                     for t in 0..zeilen {
-                        let i = anfang + t;
-                        let ausgabe = &mut bearbeiten[t];
+                        let i: usize = anfang + t;
+                        let ausgabe: &mut Vec<u32> = &mut bearbeiten[t];
 
                         // Block bearbeiten
                         for j in j_block..(j_block + block).min(n) {
