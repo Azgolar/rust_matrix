@@ -1,7 +1,7 @@
 use crate::{Einstellungen, matrix, pinning, prozessor::ProzessorSpecs};
-use crate::algorithmus::{single_thread, manuelle_threads_neue_version, manuelle_threads_alte_version, loop_unrolling,
-    block_tiling, rayon_nutzen, manuelle_threads_unsicher};
-use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write, sync::Arc};
+use crate::algorithmus::{single_thread, manuelle_threads, loop_unrolling,
+    block_tiling, rayon_nutzen};
+use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write};
 use core_affinity::{CoreId, set_for_current};
 use rayon::{ThreadPoolBuilder, ThreadPool};
 
@@ -33,7 +33,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
 
         match eingabe.modus {
             0 => {  println!("Benchmark mit {} Threads. Pinning auf Thread 0", i); }
-            1 | 2 | 3 | 4 | 5 | 6 => {  
+            1 | 2 | 3 | 4 | 5 | 6 | 7 => {  
                     let ids: Vec<usize> = pinnen.iter().map(|kern: &CoreId| kern.id).collect();
                     println!("Benchmark mit {} Threads. Pinning: {:?}", i, ids); }
             _ => { } // Fall nicht möglich da die Eingabe den Wert von Modus prüft
@@ -56,30 +56,26 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
                 single_thread::single(&a, &b, &mut c_kontrolle, aktuell, &pinnen[0]);
             }
 
-            let start: Instant = Instant::now();
+            // für Rayon da es nicht fair wäre dies zu Zeitmessung hinzuzufügen
+            let kopie = pinnen.clone();
+
+            let start: Instant = Instant::now() ;
 
             match eingabe.modus {
-                    0 => {  single_thread::single(&a, &b, &mut c, aktuell, &pinnen[0]); }
-                    1 => {
-                            let a_arc: Arc<Vec<Vec<u32>>> = Arc::new(a);
-                            let b_arc: Arc<Vec<Vec<u32>>> = Arc::new(b);                         
-                            manuelle_threads_alte_version::manuell(Arc::clone(&a_arc), Arc::clone(&b_arc), &mut c, aktuell, i, &pinnen); }
-                    2 => {  manuelle_threads_neue_version::manuell(&a, &b, &mut c, aktuell, i, &pinnen); }
-                    3 => {  loop_unrolling::unroll(&a, &b, &mut c, aktuell, i, &pinnen); }
-                    4 => {  block_tiling::tiling(&a, &b, &mut c, aktuell, i, &pinnen); } 
-                    5 => {  
-                            // Notwendig weil close moved pinnen
-                            // Zeitaufwand = allokation + koperien. 
-                            // Bei 28 Einträgen mit je 8 Byte sind das geschätzt im dreistellen nanosekunden bereich. Also kaum Aufwand   
-                            let kopie: Vec<CoreId> = pinnen.clone();                       
-                            let pool: ThreadPool = ThreadPoolBuilder::new().num_threads(i)
-                                    .start_handler(move |index| { set_for_current(kopie[index]);}).build()                             
-                                    .unwrap_or_else(|f| {
-                                println!("\nFehler beim erstellen des Threadpools: {}", f);
-                                process::exit(1)});
-                                pool.install( || { rayon_nutzen::parallel(&a, &b, &mut c, aktuell)}); }
-                    6 => {  manuelle_threads_unsicher::unsicher(&a, &b, &mut c, aktuell, i, &pinnen); }
-                    _ => { } // Fall nicht möglich da die Eingabe die Korrektheit von Modus prüft
+                    0 => {  if i == 2 { single_thread::single(&a, &b, &mut c, aktuell, &pinnen[0]);}}
+                    1 => { manuelle_threads::manuell(&a, &b, &mut c, aktuell, i, &pinnen);}
+                    2 => { loop_unrolling::unroll(&a, &b, &mut c, aktuell, i, &pinnen);}
+                    3 => { block_tiling::tiling(&a, &b, &mut c, aktuell, i ,&pinnen);}
+                    4 => {
+                        // Threadpool erstellen 
+                        let pool: ThreadPool = ThreadPoolBuilder::new().num_threads(i)
+                                    .start_handler(move |id| { set_for_current(kopie[id]);})
+                                    .build().unwrap_or_else(|f| {
+                                        println!("\nFehler beim erstellen des Threadpools: {}", f);
+                                        process::exit(1);});
+                        // Matrixmultiplikation ausführen
+                        pool.install(|| { rayon_nutzen::parallel(&a, &b, &mut c, aktuell);});}
+                    _ => { } // nicht möglich da Prüfung des Modus bei Eingabe
                 }
            
             // Laufzeit in Millisekunden

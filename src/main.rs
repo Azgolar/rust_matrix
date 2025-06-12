@@ -29,7 +29,7 @@ pub struct Einstellungen {
 fn main() {
 
     //let mut eingabe = Einstellungen::parse();
-    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "6", "-a", "matrix", "-d"];
+    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "3", "-a", "matrix", "-d"];
     let mut eingabe: Einstellungen = Einstellungen::parse_from(&test);
 
     // falls nötig .txt an Dateiname hinzufügen
@@ -42,12 +42,12 @@ fn main() {
     if eingabe.debug {
         let umwandeln: &'static str = match eingabe.modus {
             0 => "single Thread",
-            1 => "manuelle Threads - alte version",
-            2 => "manuelle Threads - neue version",
-            3 => "manuelle Threads mit loop unrolling",
-            4 => "manuelle Threads mit block tiling",
-            5 => "parallelisierung mit Rayon",
-            6 => "parallelisierung mit unsafe",
+            1 => "manuelle Threads",
+            2 => "loop unrolling",
+            3 => "block tiling",
+            4 => "Rayon",
+            5 => "Crossbeam",
+            6 => "SIMD",
             _ => "Fehler, Modus nicht bekannt"
         };
         println!("\nEinstellungen:\nMatrixgrößen: {:?}\nModus:        {}\nLogdatei:     {}", n, umwandeln, eingabe.name);
