@@ -1,6 +1,5 @@
 use crate::{Einstellungen, matrix, pinning, prozessor::ProzessorSpecs};
-use crate::algorithmus::{single_thread, manuelle_threads, loop_unrolling,
-    block_tiling, rayon_nutzen};
+use crate::algorithmus::{single_thread, manuelle_threads, loop_unrolling, block_tiling, rayon_nutzen, simd_nutzen};
 use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write};
 use core_affinity::{CoreId, set_for_current};
 use rayon::{ThreadPoolBuilder, ThreadPool};
@@ -33,7 +32,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
 
         match eingabe.modus {
             0 => {  println!("Benchmark mit {} Threads. Pinning auf Thread 0", i); }
-            1 | 2 | 3 | 4 | 5 | 6 | 7 => {  
+            1 | 2 | 3 | 4 | 5 | 6 => {  
                     let ids: Vec<usize> = pinnen.iter().map(|kern: &CoreId| kern.id).collect();
                     println!("Benchmark mit {} Threads. Pinning: {:?}", i, ids); }
             _ => { } // Fall nicht möglich da die Eingabe den Wert von Modus prüft
@@ -75,6 +74,8 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
                                         process::exit(1);});
                         // Matrixmultiplikation ausführen
                         pool.install(|| { rayon_nutzen::parallel(&a, &b, &mut c, aktuell);});}
+                    5 = { }
+                    6 => { simd_nutzen::optimiert(&a, &b, &mut c, aktuell, i, &pinnen); }
                     _ => { } // nicht möglich da Prüfung des Modus bei Eingabe
                 }
            
