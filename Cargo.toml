@@ -8,3 +8,4 @@ clap = { version = "4", features = ["derive"] }
 core_affinity = "0.8"
 rand = "0.9"
 rayon = "1.1"
+crossbeam = "0.8"

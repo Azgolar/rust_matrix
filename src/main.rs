@@ -29,9 +29,9 @@ pub struct Einstellungen {
 
 fn main() {
 
-    //let mut eingabe = Einstellungen::parse();
-    let test: [&'static str; 8] = ["name", "-n", "20", "-m", "6", "-a", "matrix", "-d"];
-    let mut eingabe: Einstellungen = Einstellungen::parse_from(&test);
+    let mut eingabe = Einstellungen::parse();
+    //let test: [&'static str; 8] = ["name", "-n", "20", "-m", "5", "-a", "matrix", "-d"];
+    //let mut eingabe: Einstellungen = Einstellungen::parse_from(&test);
 
     // falls nötig .txt an Dateiname hinzufügen
     if !eingabe.name.to_lowercase().ends_with(".txt") {

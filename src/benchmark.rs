@@ -1,5 +1,6 @@
 use crate::{Einstellungen, matrix, pinning, prozessor::ProzessorSpecs};
-use crate::algorithmus::{single_thread, manuelle_threads, loop_unrolling, block_tiling, rayon_nutzen, simd_nutzen};
+use crate::algorithmus::{single_thread, manuelle_threads, loop_unrolling, block_tiling, rayon_nutzen, simd_nutzen,
+    crossbeam_nutzen};
 use std::{process, time::Instant, path::Path, fs::OpenOptions, io::Write};
 use core_affinity::{CoreId, set_for_current};
 use rayon::{ThreadPoolBuilder, ThreadPool};
@@ -74,7 +75,7 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
                                         process::exit(1);});
                         // Matrixmultiplikation ausführen
                         pool.install(|| { rayon_nutzen::parallel(&a, &b, &mut c, aktuell);});}
-                    5 => { }
+                    5 => { crossbeam_nutzen::work_stealing(&a, &b, &mut c, aktuell, i, &pinnen); }
                     6 => { simd_nutzen::optimiert(&a, &b, &mut c, aktuell, i, &pinnen); }
                     _ => { } // nicht möglich da Prüfung des Modus bei Eingabe
                 }
