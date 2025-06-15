@@ -9,14 +9,7 @@ struct MatrixTask {
     zeilen_ende: usize,
 }
 
-pub fn work_stealing(
-    a: &Vec<Vec<u32>>,
-    b: &Vec<Vec<u32>>,
-    c: &mut Vec<Vec<u32>>,
-    n: usize,
-    threads: usize,
-    pinnen: &Vec<CoreId>
-) {
+pub fn starten(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
     // Globale Queue für Tasks
     let injector = Arc::new(Injector::<MatrixTask>::new());
    

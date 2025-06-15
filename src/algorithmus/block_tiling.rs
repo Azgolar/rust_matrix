@@ -1,7 +1,7 @@
 use std::thread;
 use core_affinity::{set_for_current, CoreId};
 
-pub fn tiling(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
+pub fn starten(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
     thread::scope(|s|{
         let mut übrig:&mut [Vec<u32>]  = c.as_mut_slice();
         let mut offset: usize = 0;

@@ -3,7 +3,7 @@ use core_affinity::{set_for_current, CoreId};
 /*
     single threaded Matrixmultiplikation
 */
-pub fn single(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, kern: &CoreId) {
+pub fn starten(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, kern: &CoreId) {
 
     set_for_current(*kern);
 

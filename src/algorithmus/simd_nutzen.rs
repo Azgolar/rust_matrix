@@ -5,7 +5,7 @@ use core_affinity::{CoreId, set_for_current};
     nutzt Simd und loop unrolling
     Zum Testen wurde ein i7-14700k verwendet. Der Prozessor hat AVX2 Register mit Breite 256 bit (8 * 32 bit)
 */
-pub fn optimiert(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
+pub fn starten(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
     thread::scope(|s| {
         let mut übrig: &mut [Vec<u32>] = c.as_mut_slice();
         let mut offset: usize = 0;

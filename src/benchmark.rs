@@ -53,19 +53,19 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
             let mut c_kontrolle: Vec<Vec<u32>> = vec![vec![0; aktuell]; aktuell];
 
             if eingabe.debug {
-                single_thread::single(&a, &b, &mut c_kontrolle, aktuell, &pinnen[0]);
+                single_thread::starten(&a, &b, &mut c_kontrolle, aktuell, &pinnen[0]);
             }
 
             // für Rayon da es nicht fair wäre dies zu Zeitmessung hinzuzufügen
-            let kopie = pinnen.clone();
+            let kopie: Vec<CoreId> = pinnen.clone();
 
             let start: Instant = Instant::now() ;
 
             match eingabe.modus {
-                    0 => {  if i == 2 { single_thread::single(&a, &b, &mut c, aktuell, &pinnen[0]);}}
-                    1 => { manuelle_threads::manuell(&a, &b, &mut c, aktuell, i, &pinnen);}
-                    2 => { loop_unrolling::unroll(&a, &b, &mut c, aktuell, i, &pinnen);}
-                    3 => { block_tiling::tiling(&a, &b, &mut c, aktuell, i ,&pinnen);}
+                    0 => {  if i == 2 { single_thread::starten(&a, &b, &mut c, aktuell, &pinnen[0]);}}
+                    1 => { manuelle_threads::starten(&a, &b, &mut c, aktuell, i, &pinnen);}
+                    2 => { loop_unrolling::starten(&a, &b, &mut c, aktuell, i, &pinnen);}
+                    3 => { block_tiling::starten(&a, &b, &mut c, aktuell, i ,&pinnen);}
                     4 => {
                         // Threadpool erstellen 
                         let pool: ThreadPool = ThreadPoolBuilder::new().num_threads(i)
@@ -74,9 +74,9 @@ pub fn beginnen(eingabe: &Einstellungen, n: Vec<u32>) {
                                         println!("\nFehler beim erstellen des Threadpools: {}", f);
                                         process::exit(1);});
                         // Matrixmultiplikation ausführen
-                        pool.install(|| { rayon_nutzen::parallel(&a, &b, &mut c, aktuell);});}
-                    5 => { crossbeam_nutzen::work_stealing(&a, &b, &mut c, aktuell, i, &pinnen); }
-                    6 => { simd_nutzen::optimiert(&a, &b, &mut c, aktuell, i, &pinnen); }
+                        pool.install(|| { rayon_nutzen::starten(&a, &b, &mut c, aktuell);});}
+                    5 => { crossbeam_nutzen::starten(&a, &b, &mut c, aktuell, i, &pinnen); }
+                    6 => { simd_nutzen::starten(&a, &b, &mut c, aktuell, i, &pinnen); }
                     _ => { } // nicht möglich da Prüfung des Modus bei Eingabe
                 }
            

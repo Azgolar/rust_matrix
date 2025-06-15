@@ -1,56 +1,45 @@
-use std::thread;
+use std::{thread, sync::atomic::{AtomicPtr, AtomicUsize, Ordering}};
 use core_affinity::{CoreId, set_for_current};
 
-pub fn manuell(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
+pub fn starten(a: &Vec<Vec<u32>>, b: &Vec<Vec<u32>>, c: &mut Vec<Vec<u32>>, n: usize, threads: usize, pinnen: &Vec<CoreId>) {
+    
+    // Anz
+    let zeilen: usize = 4;
+    let zähler: AtomicUsize = AtomicUsize::new(0);
+    let c_zeiger: AtomicPtr<Vec<u32>> = AtomicPtr::new(c.as_mut_ptr());
 
-    thread::scope(|s| {
-        let mut übrig: &mut [Vec<u32>] = c.as_mut_slice();
-        let mut offset: usize = 0;
-
-        // Zeilen pro Thread
-        let basis: usize = n / threads;
-        let rest: usize = n % threads;
-
+    thread::scope(|s|{
         for z in 0..threads {
-            // die ersten Threads bekommen eine zusätzlich Zeile
-            let zeilen: usize;
-            if z < rest {
-                zeilen = basis + 1;
-            } 
-            else {
-                zeilen = basis;
-            }
-
-            let (bearbeiten, restliche_zeilen): (&mut[Vec<u32>], &mut[Vec<u32>]) = übrig.split_at_mut(zeilen);
-            let anfang: usize = offset;
-
             let kern: CoreId = pinnen[z];
+            let zähler_neu: &AtomicUsize = &zähler;
+            let c_neu: &AtomicPtr<Vec<u32>> = &c_zeiger;
 
             s.spawn(move || {
-                // Thread pinnen
                 set_for_current(kern);
 
-                for z in 0..zeilen {
+                loop { 
+                    let anfang: usize = zähler_neu.fetch_add(zeilen, Ordering::Relaxed);
+                    if anfang >= n {
+                        break;
+                    }
 
-                    // Zugriff auf aktuelle Zeile zur Bearbeitung
-                    let ausgabe: &mut Vec<u32> = &mut bearbeiten[z];
+                    let ende: usize = (anfang + zeilen).min(n);
 
-                    // Zeilenindex
-                    let i: usize = anfang + z;
+                    let zeiger: *mut Vec<u32> = c_neu.load(Ordering::Relaxed);
+                    
+                    for i in anfang..ende {
+                        let ergebnis: &mut Vec<u32> = unsafe { &mut *zeiger.add(i) };
 
-                    for j in 0..n {
-                        let mut summe: u32 = 0;
-                        for k in 0..n {
-                            summe = summe + a[i][k] * b[k][j];
+                        for j in 0..n {
+                            let mut summe = 0;
+                            for k in 0..n {
+                                summe = summe + a[i][k] * b[k][j];
+                            }
+                            ergebnis[j] = summe;
                         }
-                        ausgabe[j] = summe;
                     }
                 }
             });
-
-            // Updaten für nächsten Thread
-            übrig = restliche_zeilen;
-            offset = offset + zeilen;
         }
     });
 }
